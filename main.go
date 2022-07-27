@@ -1,12 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"strings"
 	"sync"
 )
 
 const (
-	MAX_THREADS = 8
+	MAX_THREADS     = 8
+	INPUT_FILE_NAME = "input.txt"
 )
 
 var (
@@ -92,34 +98,77 @@ func NewMatrix(m [][]int) *Matrix {
 	return &Matrix{m, &sync.Mutex{}}
 }
 
+func ParseInputRow(inputRow string) ([]int, error) {
+	cells := strings.Split(inputRow, " ")
+	var row []int
+	for _, cell := range cells {
+		item, err := strconv.ParseInt(cell, 10, 0)
+		if err != nil {
+			return nil, err
+		}
+		row = append(row, int(item))
+	}
+
+	return row, nil
+}
+
+func ReadInputMatrix(scanner *bufio.Scanner) ([][]int, error) {
+	var matrix [][]int
+	for scanner.Scan() {
+		inputRow := scanner.Text()
+		if inputRow != "" {
+			break
+		}
+
+		row, err := ParseInputRow(inputRow)
+		if err != nil {
+			return nil, err
+		}
+		matrix = append(matrix, row)
+	}
+
+	return matrix, nil
+}
+
+func ReadInput() ([][]int, [][]int, error) {
+	file, err := os.Open(INPUT_FILE_NAME)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	A, err := ReadInputMatrix(scanner)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	B, err := ReadInputMatrix(scanner)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return A, B, nil
+}
+
+func NewResultMatrix(A *Matrix, B *Matrix) (*Matrix, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
 func main() {
-	A := NewMatrix([][]int{
-		{735, 342, 284, 173, 115},
-		{591, 47, 728, 990, 782},
-		{630, 662, 946, 123, 163},
-		{812, 943, 812, 648, 470},
-		{223, 573, 69, 541, 399},
-		{113, 32, 770, 735, 399},
-		{410, 159, 95, 290, 423},
-		{48, 351, 97, 897, 995},
-	})
-	B := NewMatrix([][]int{
-		{635, 189, 179},
-		{665, 882, 328},
-		{28, 791, 778},
-		{414, 13, 882},
-		{594, 437, 497},
-	})
-	C := NewMatrix([][]int{
-		{0, 0, 0},
-		{0, 0, 0},
-		{0, 0, 0},
-		{0, 0, 0},
-		{0, 0, 0},
-		{0, 0, 0},
-		{0, 0, 0},
-		{0, 0, 0},
-	})
+	inputA, inputB, err := ReadInput()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	A := NewMatrix(inputA)
+	B := NewMatrix(inputB)
+
+	C, err := NewResultMatrix(A, B)
+	if err != nil {
+		log.Panic(err)
+	}
 
 	MatrixMulti(A, B, C)
 
