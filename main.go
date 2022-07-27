@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 const (
-	MAX_THREADS = 8
+	MAX_THREADS       = 128
+	BENCHMARK_SAMPLES = 1000
 )
 
 var (
@@ -88,6 +90,17 @@ func MatrixMulti(A *Matrix, B *Matrix, C *Matrix) {
 	wg.Wait()
 }
 
+func BenchmarkMatrixMulti(A *Matrix, B *Matrix, C *Matrix) {
+	accum := 0
+	for i := 1; i < BENCHMARK_SAMPLES; i++ {
+		start := time.Now()
+		MatrixMulti(A, B, C)
+		accum += int(time.Since(start))
+	}
+	average := accum / BENCHMARK_SAMPLES
+	fmt.Printf("Benchmark result (%d threads): %dns\n", MAX_THREADS, average)
+}
+
 func main() {
 	A := &Matrix{
 		Data: [][]int{
@@ -126,5 +139,5 @@ func main() {
 		Lock: &sync.Mutex{},
 	}
 
-	MatrixMulti(A, B, C)
+	BenchmarkMatrixMulti(A, B, C)
 }
