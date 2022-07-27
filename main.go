@@ -1,20 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"log"
-	"os"
-	"strconv"
-	"strings"
 	"sync"
-	"time"
 )
 
 const (
-	MAX_THREADS       = 8
-	INPUT_FILE_NAME   = "input.txt"
-	BENCHMARK_SAMPLES = 1000
+	MAX_THREADS = 8
 )
 
 var (
@@ -23,27 +15,33 @@ var (
 )
 
 type Matrix struct {
-	data [][]int
-	lock *sync.Mutex
+	Data [][]int
+	Lock *sync.Mutex
 }
 
 func (m *Matrix) Read(i int, j int) int {
-	return m.data[i][j]
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+	return m.Data[i][j]
 }
 
 func (m *Matrix) Write(i int, j int, value int) {
-	m.data[i][j] = value
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+	m.Data[i][j] = value
 }
 
 func (m *Matrix) Inc(i int, j int, value int) {
-	m.data[i][j] += value
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+	m.Data[i][j] += value
 }
 
 func (m *Matrix) GetDimensions() (i int, j int) {
-	i = len(m.data)
+	i = len(m.Data)
 
-	if len(m.data) > 0 {
-		j = len(m.data[0])
+	if len(m.Data) > 0 {
+		j = len(m.Data[0])
 	}
 
 	return
@@ -54,7 +52,7 @@ func (ma *Matrix) Print() {
 
 	for i := 0; i < m; i++ {
 		for j := 0; j < n; j++ {
-			fmt.Printf("%d ", ma.data[i][j])
+			fmt.Printf("%d ", ma.Data[i][j])
 		}
 		fmt.Println()
 	}
@@ -90,106 +88,43 @@ func MatrixMulti(A *Matrix, B *Matrix, C *Matrix) {
 	wg.Wait()
 }
 
-func NewMatrix(m [][]int) *Matrix {
-	return &Matrix{m, &sync.Mutex{}}
-}
-
-func ParseInputRow(inputRow string) ([]int, error) {
-	cells := strings.Split(inputRow, " ")
-	var row []int
-	for _, cell := range cells {
-		item, err := strconv.ParseInt(cell, 10, 0)
-		if err != nil {
-			return nil, err
-		}
-		row = append(row, int(item))
-	}
-
-	return row, nil
-}
-
-func ReadInputMatrix(scanner *bufio.Scanner) ([][]int, error) {
-	var matrix [][]int
-	for scanner.Scan() {
-		inputRow := scanner.Text()
-		if inputRow == "" {
-			break
-		}
-
-		row, err := ParseInputRow(inputRow)
-		if err != nil {
-			return nil, err
-		}
-		matrix = append(matrix, row)
-	}
-
-	return matrix, nil
-}
-
-func ReadInput() ([][]int, [][]int, error) {
-	file, err := os.Open(INPUT_FILE_NAME)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-
-	A, err := ReadInputMatrix(scanner)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	B, err := ReadInputMatrix(scanner)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return A, B, nil
-}
-
-func NewResultMatrix(A *Matrix, B *Matrix) (*Matrix, error) {
-	m, An := A.GetDimensions()
-	Bn, p := B.GetDimensions()
-	if An != Bn {
-		return nil, fmt.Errorf("incompatible input matrices")
-	}
-
-	c := make([][]int, m)
-	for i := range c {
-		c[i] = make([]int, p)
-	}
-	C := NewMatrix(c)
-
-	return C, nil
-}
-
-func BenchmarkMatrixMulti(A *Matrix, B *Matrix, C *Matrix) {
-	accum := 0
-	for i := 0; i < BENCHMARK_SAMPLES; i++ {
-		start := time.Now()
-		MatrixMulti(A, B, C)
-		duration := int(time.Since(start))
-		accum += duration
-	}
-	average := accum / BENCHMARK_SAMPLES
-
-	fmt.Printf("Benchmark result (%d threads): %dns\n", MAX_THREADS, average)
-}
-
 func main() {
-	inputA, inputB, err := ReadInput()
-	if err != nil {
-		log.Panic(err)
+	A := &Matrix{
+		Data: [][]int{
+			{735, 342, 284, 173, 115},
+			{591, 47, 728, 990, 782},
+			{630, 662, 946, 123, 163},
+			{812, 943, 812, 648, 470},
+			{223, 573, 69, 541, 399},
+			{113, 32, 770, 735, 399},
+			{410, 159, 95, 290, 423},
+			{48, 351, 97, 897, 995},
+		},
+		Lock: &sync.Mutex{},
+	}
+	B := &Matrix{
+		Data: [][]int{
+			{635, 189, 179},
+			{665, 882, 328},
+			{28, 791, 778},
+			{414, 13, 882},
+			{594, 437, 497},
+		},
+		Lock: &sync.Mutex{},
+	}
+	C := &Matrix{
+		Data: [][]int{
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 0, 0},
+			{0, 0, 0},
+		},
+		Lock: &sync.Mutex{},
 	}
 
-	A := NewMatrix(inputA)
-	B := NewMatrix(inputB)
-
-	C, err := NewResultMatrix(A, B)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	BenchmarkMatrixMulti(A, B, C)
+	MatrixMulti(A, B, C)
 }

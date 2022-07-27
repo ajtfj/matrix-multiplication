@@ -1,3 +1,3 @@
-module github.com/ajtfj/matrix-multiplication
+module matrix-multiplication
 
 go 1.17
