@@ -8,11 +8,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
-	MAX_THREADS     = 8
-	INPUT_FILE_NAME = "input.txt"
+	MAX_THREADS       = 1
+	INPUT_FILE_NAME   = "input.txt"
+	BENCHMARK_SAMPLES = 1000
 )
 
 var (
@@ -162,6 +164,19 @@ func NewResultMatrix(A *Matrix, B *Matrix) (*Matrix, error) {
 	return C, nil
 }
 
+func BenchmarkMatrixMulti(A *Matrix, B *Matrix, C *Matrix) {
+	accum := 0
+	for i := 0; i < BENCHMARK_SAMPLES; i++ {
+		start := time.Now()
+		MatrixMulti(A, B, C)
+		duration := int(time.Since(start))
+		accum += duration
+	}
+	average := accum / BENCHMARK_SAMPLES
+
+	fmt.Printf("Benchmark result (%d threads): %dns\n", MAX_THREADS, average)
+}
+
 func main() {
 	inputA, inputB, err := ReadInput()
 	if err != nil {
@@ -176,7 +191,5 @@ func main() {
 		log.Panic(err)
 	}
 
-	MatrixMulti(A, B, C)
-
-	C.Print()
+	BenchmarkMatrixMulti(A, B, C)
 }
