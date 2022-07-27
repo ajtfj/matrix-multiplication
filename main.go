@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	MAX_THREADS       = 1
+	MAX_THREADS       = 8
 	INPUT_FILE_NAME   = "input.txt"
 	BENCHMARK_SAMPLES = 1000
 )
