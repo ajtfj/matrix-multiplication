@@ -116,7 +116,7 @@ func ReadInputMatrix(scanner *bufio.Scanner) ([][]int, error) {
 	var matrix [][]int
 	for scanner.Scan() {
 		inputRow := scanner.Text()
-		if inputRow != "" {
+		if inputRow == "" {
 			break
 		}
 
