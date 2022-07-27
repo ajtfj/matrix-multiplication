@@ -153,7 +153,19 @@ func ReadInput() ([][]int, [][]int, error) {
 }
 
 func NewResultMatrix(A *Matrix, B *Matrix) (*Matrix, error) {
-	return nil, fmt.Errorf("Not implemented")
+	m, An := A.GetDimensions()
+	Bn, p := B.GetDimensions()
+	if An != Bn {
+		return nil, fmt.Errorf("incompatible input matrices")
+	}
+
+	c := make([][]int, m)
+	for i := range c {
+		c[i] = make([]int, p)
+	}
+	C := NewMatrix(c)
+
+	return C, nil
 }
 
 func main() {
