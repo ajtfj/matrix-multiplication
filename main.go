@@ -26,20 +26,14 @@ type Matrix struct {
 }
 
 func (m *Matrix) Read(i int, j int) int {
-	m.lock.Lock()
-	defer m.lock.Unlock()
 	return m.data[i][j]
 }
 
 func (m *Matrix) Write(i int, j int, value int) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
 	m.data[i][j] = value
 }
 
 func (m *Matrix) Inc(i int, j int, value int) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
 	m.data[i][j] += value
 }
 
